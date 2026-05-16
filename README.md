@@ -1,8 +1,10 @@
-# 🚶 Person Counting System
+# 🚶 People Counting System with YOLO11 and ByteTrack
 
-A pedestrian counting system using **YOLOv11** and **ByteTrack** on surveillance footage. The system detects and tracks pedestrians crossing a defined line, classifying movement as **IN** (upward) or **OUT** (downward).
+A pedestrian counting system using **YOLOv11** and **ByteTrack** on surveillance footage. The system detects and tracks pedestrians crossing a defined line, classifying movement as **IN** (downward) or **OUT** (upward).
 
 Includes a full pipeline: detection → tracking → line counting → accuracy evaluation against the **Oxford Town Centre** ground truth dataset. Also supports **fine-tuning a custom Head Detection model** for improved accuracy in crowded scenes.
+
+> **GitHub:** [https://github.com/hijoouzc/People-Counting-System-with-YOLO11-and-ByteTrack](https://github.com/hijoouzc/People-Counting-System-with-YOLO11-and-ByteTrack)
 
 ---
 
@@ -20,7 +22,7 @@ Includes a full pipeline: detection → tracking → line counting → accuracy 
 ## 📁 Project Structure
 
 ```text
-Person-Counting/
+People-Counting-System-with-YOLO11-and-ByteTrack/
 ├── configs/
 │   └── head_dataset.yaml        # YOLO dataset config for head detection training
 ├── data/
@@ -64,41 +66,58 @@ Person-Counting/
 
 - Python 3.10+
 - CUDA-capable GPU (tested on NVIDIA RTX 4050 6GB VRAM)
-- Conda (recommended) or virtualenv
-
-**Python Dependencies:**
-```
-ultralytics>=8.3.0
-opencv-python-headless
-numpy
-pandas
-```
+- Conda (recommended)
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone & Install
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/Person-Counting.git
-cd Person-Counting
+git clone https://github.com/hijoouzc/People-Counting-System-with-YOLO11-and-ByteTrack.git
+cd People-Counting-System-with-YOLO11-and-ByteTrack
+```
+
+### 2. Set Up Conda Environment
+
+```bash
+# Create a new conda environment with Python 3.10
+conda create -n person-counting python=3.10 -y
+
+# Activate the environment
+conda activate person-counting
+
+# Install PyTorch with CUDA 12.x support (adjust cu version if needed)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Install all other dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Download Required Files
+> **Note:** If you don't have a CUDA-capable GPU, omit the PyTorch CUDA step and install the CPU version:
+> ```bash
+> pip install torch torchvision torchaudio
+> pip install -r requirements.txt
+> ```
+
+### 3. Download Required Files
 
 Download the following files and place them in `data/raw/`:
 
 | File | Source |
 |---|---|
-| `TownCentreXVID.mp4` | [Oxford Town Centre Dataset](http://www.robots.ox.ac.uk/~lav/Research/Projects/2009bbenfold_headpose/project.html) |
+| `TownCentreXVID.mp4` | [Oxford Town Centre Dataset on Kaggle](https://www.kaggle.com/datasets/ashayajbani/oxford-town-centre) |
 | `TownCentre-groundtruth.top` | Same page above |
-| `yolo11s.pt` / `yolo11m.pt` | [Ultralytics YOLO11](https://github.com/ultralytics/assets/releases) → place in `models/pretrained/` |
+| `yolo11s.pt` | [Ultralytics Releases](https://github.com/ultralytics/assets/releases) → place in `models/pretrained/` |
+| `yolo11m.pt` | [Ultralytics Releases](https://github.com/ultralytics/assets/releases) → place in `models/pretrained/` |
 
-### 3. Run Pedestrian Counting
+### 4. Run Pedestrian Counting
 
 ```bash
+# Activate the environment first
+conda activate person-counting
+
 # Use default video (data/raw/TownCentreXVID.mp4)
 python src/app.py
 
@@ -107,8 +126,8 @@ python src/app.py path/to/your_video.mp4
 ```
 
 **Output:**
-- Annotated video saved to `outputs/count/counting_output.mp4`
-- Summary CSV saved to `outputs/count/summary.csv`
+- Annotated video → `outputs/count/counting_output.mp4`
+- Count summary CSV → `outputs/count/summary.csv`
 - Press **`q`** on the display window to stop early
 
 ---
@@ -155,7 +174,7 @@ The ground truth `.top` file already contains head bounding box coordinates for 
 python src/prepare_data.py
 ```
 
-This will create the `data/datasets/towncentre_head/` directory with ~207 images (80% train, 20% val) and their corresponding `.txt` label files.
+This creates `data/datasets/towncentre_head/` with ~207 images (80% train / 20% val) and their corresponding `.txt` label files.
 
 ### Step 2: Train the Model
 
@@ -163,24 +182,25 @@ This will create the `data/datasets/towncentre_head/` directory with ~207 images
 python src/train.py
 ```
 
-Training runs for **50 epochs** on your GPU using `yolo11s.pt` as the base (optimized for 6GB VRAM with `batch=4`). Results are saved to `outputs/runs/train_head/`.
+Training runs for **50 epochs** using `yolo11s.pt` as the base (optimized for 6GB VRAM with `batch=4`). Results are saved to `outputs/runs/train_head/`.
+
+> **If training crashes mid-way** (common on Laptop GPUs due to thermals), just run `python src/train.py` again — YOLO automatically saves `last.pt` checkpoints and will resume from where it left off.
 
 ### Step 3: Use Your Custom Model
 
-Edit `src/app.py` and update the model path:
+Edit `src/app.py` line ~32 and update the model path:
 
 ```python
-# Line ~32 in src/app.py
 MODEL_NAME = os.path.join(PROJECT_ROOT, "outputs/runs/train_head/weights/best.pt")
 ```
 
-Then run `python src/app.py` again to see the improved counting!
+Then run `python src/app.py` again to see improved counting accuracy!
 
 ---
 
 ## ⚙️ Configuration
 
-All key parameters are at the top of each script. You can adjust them without touching the core logic:
+All key parameters are at the top of each script. Adjust them without touching the core logic:
 
 ### `src/app.py`
 
@@ -195,7 +215,7 @@ All key parameters are at the top of each script. You can adjust them without to
 
 | Parameter | Default | Description |
 |---|---|---|
-| `COUNTING_LINE_Y` | `500` | Must match `COUNTING_LINE` Y in `app.py` |
+| `COUNTING_LINE_Y` | `500` | Must match `COUNTING_LINE` Y value in `app.py` |
 
 ### `src/prepare_data.py`
 
@@ -209,7 +229,7 @@ All key parameters are at the top of each script. You can adjust them without to
 | Parameter | Default | Description |
 |---|---|---|
 | `epochs` | `50` | Training epochs |
-| `batch` | `4` | Batch size (safe for 6GB VRAM) |
+| `batch` | `4` | Batch size (safe for 6GB VRAM — reduce to `2` if crashing) |
 | `imgsz` | `640` | Input image size |
 
 ---
@@ -220,8 +240,8 @@ The counting direction is defined as follows:
 
 | Direction | Label | Description |
 |---|---|---|
-| ↓ Top → Bottom | **IN** | Person moves downward across the line |
-| ↑ Bottom → Top | **OUT** | Person moves upward across the line |
+| ↓ Top → Bottom | **IN** | Person moves downward across the counting line |
+| ↑ Bottom → Top | **OUT** | Person moves upward across the counting line |
 
 This matches the default Ultralytics `ObjectCounter` behavior with a horizontal line.
 
@@ -234,10 +254,11 @@ This matches the default Ultralytics `ObjectCounter` behavior with a horizontal 
 | GPU | NVIDIA RTX 4050 Laptop (6GB VRAM) |
 | CUDA | 12.8 |
 | PyTorch | 2.10.0+cu128 |
-| Ultralytics | 8.3+ |
+| Ultralytics | 8.4.50 |
 | OS | Ubuntu 22.04 |
+| Python | 3.10.19 |
 
-> **⚠️ CUDA Crash Warning:** If you encounter `CUDA error: unspecified launch failure` during training or inference, reduce `batch` to `2` or allow the GPU to cool down before retrying. This is a hardware thermal issue, not a code bug.
+> **⚠️ CUDA Crash Warning:** If you encounter `CUDA error: unspecified launch failure` during training or inference, reduce `batch` to `2` and allow the GPU to cool down before retrying. This is a hardware thermal issue, not a code bug. YOLO checkpoints are auto-saved so training can always be resumed.
 
 ---
 
@@ -247,9 +268,10 @@ This project uses the **Oxford Town Centre** dataset:
 
 - **Video:** 1920×1080, 25 FPS, ~5 minutes, recorded on a UK high street
 - **Annotations:** 157 unique pedestrian tracks with head & body bounding boxes, frame-by-frame
-- **Format (`.top`):** `person_id, frame, head_valid, body_valid, headL, headT, headR, headB, bodyL, bodyT, bodyR, bodyB`
+- **Format (`.top` columns):** `person_id, frame, head_valid, body_valid, headL, headT, headR, headB, bodyL, bodyT, bodyR, bodyB`
+- **Download:** [Kaggle — Oxford Town Centre](https://www.kaggle.com/datasets/ashayajbani/oxford-town-centre)
 
-> The dataset is **not included** in this repository due to file size. Please download it from the [Oxford Visual Geometry Group](http://www.robots.ox.ac.uk/~lav/Research/Projects/2009bbenfold_headpose/project.html).
+> The dataset is **not included** in this repository due to file size. Download and place files in `data/raw/`.
 
 ---
 
