@@ -35,7 +35,7 @@ PERSON_CLASS_ID = 0
 DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentreXVID.mp4")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs/count")
 
-# Define the counting line. 
+# Define the counting line.
 # You can tweak these coordinates based on the camera angle.
 # Format: [(x1, y1), (x2, y2)]
 COUNTING_LINE = [(0, 500), (1920, 500)]

@@ -34,13 +34,13 @@ def main():
         data=data_cfg,
         epochs=50,          # 50 epochs is enough for a strong baseline
         imgsz=640,          # Image size
-        batch=4,            # Reduced from 8 to 4 to prevent CUDA OOM / crash on 6GB VRAM
+        batch=4,            # Batch size (safe for 6GB VRAM)
         device=0,           # Use GPU 0
+        amp=False,          # Disable AMP (Mixed Precision) to prevent CUDA kernel crash on laptop GPU
         project=project_dir,
         name='train_head',  # Save results to outputs/runs/train_head/
         exist_ok=True,
-        workers=2,          # Reduced workers to lower CPU/RAM pressure alongside GPU
-        cache=False,        # Disable caching to avoid VRAM fragmentation
+        workers=0,          # Single-thread data loading to prevent pin_memory desync crash
     )
     
     print("\n[INFO] Training complete!")
