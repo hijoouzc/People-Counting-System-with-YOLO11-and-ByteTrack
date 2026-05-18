@@ -25,7 +25,7 @@ VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentreXVID.mp4")
 GT_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre-groundtruth.top")
 DATASET_DIR = os.path.join(PROJECT_ROOT, "data/datasets/towncentre_head")
 
-FRAME_SKIP = 15
+FRAME_SKIP = 5
 TRAIN_RATIO = 0.8
 
 def setup_directories():

@@ -10,23 +10,28 @@ Usage:
     python test_image.py data/image.png
 
 Output:
-    - Annotated image saved to runs/detect/predict/
+    - Annotated image saved to outputs/test_image/
     - Detection summary printed to terminal
 """
 
 import sys
 import os
+import cv2
 from ultralytics import YOLO
+
+# Project root (one level up from this experiments/ directory)
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = "yolo11s.pt"       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence (30%)
+MODEL_NAME = os.path.join(ROOT_DIR, "outputs/runs/train_head/weights/best.pt")  # Fine-tuned head detection model
+CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_IMAGE_PATH = "data/image.png"
+DEFAULT_IMAGE_PATH = os.path.join(ROOT_DIR, "data/image.png")
+OUTPUT_DIR = os.path.join(ROOT_DIR, "outputs")  # Project-controlled output root
 
 
 # ============================================================
@@ -67,7 +72,7 @@ def print_detection_summary(results) -> None:
 
     print()
     print(f"  Inference speed: {results[0].speed['inference']:.1f} ms")
-    print(f"  Output saved to: runs/detect/predict/")
+    print(f"  Output saved to: outputs/test_image/")
     print("=" * 55)
 
 
@@ -90,16 +95,25 @@ def main():
     # Load pretrained YOLO model (auto-downloads on first run)
     model = YOLO(MODEL_NAME)
 
-    # Run detection: person class only, save annotated result
+    # Run detection (save=False so we can plot manually with custom small font sizes)
     results = model.predict(
         source=image_path,
         classes=[PERSON_CLASS_ID],
         conf=CONFIDENCE_THRESHOLD,
-        save=True,              # Save annotated image to runs/detect/predict/
+        save=False,
         device=GPU_DEVICE,
     )
 
     print_detection_summary(results)
+
+    # Plot with very thin line width and smaller font scaling
+    annotated = results[0].plot(line_width=1, font_size=0.6)
+
+    # Save to custom outputs directory manually
+    out_dir = os.path.join(OUTPUT_DIR, "test_image")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "image.png")
+    cv2.imwrite(out_path, annotated)
 
 
 if __name__ == "__main__":
