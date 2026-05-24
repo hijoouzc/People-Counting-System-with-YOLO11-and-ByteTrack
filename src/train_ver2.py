@@ -3,16 +3,20 @@ import yaml
 import kagglehub
 from ultralytics import YOLO
 
-# BẮT BUỘC: Khi chạy local, toàn bộ lệnh train phải nằm trong khối __main__ 
-# để tránh lỗi crash do cơ chế Multiprocessing (đa tiến trình) của PyTorch.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+# Required when running locally: keep all training code inside the __main__ guard
+# to avoid PyTorch multiprocessing crashes.
 if __name__ == '__main__':
     
-    print("1. Đang tải và xác định bộ dữ liệu từ Kaggle xuống máy cá nhân...")
-    # Tự động tải về thư mục cache cục bộ của máy (VD: ~/.cache/kagglehub)
+    os.chdir(PROJECT_ROOT)
+    print("1. Downloading and locating the Kaggle dataset on the local machine...")
+    # KaggleHub downloads to the local cache directory (for example: ~/.cache/kagglehub)
     base_path = kagglehub.dataset_download("hoangxuanviet/scut-head")
-    print(f"Thư mục gốc: {base_path}")
+    print(f"Dataset root: {base_path}")
 
-    # 2. Bật "Radar" dò tìm tự động mọi ngóc ngách
+    # 2. Automatically scan for the train and validation image folders
     train_dir = None
     val_dir = None
 
@@ -22,48 +26,50 @@ if __name__ == '__main__':
         if ('val' in root or 'valid' in root) and root.endswith('images'):
             val_dir = root
 
-    # 3. Xử lý kết quả và Train
+    # 3. Process the result and start training
     if train_dir and val_dir:
-        print(f"\n2. Đã radar thành công thư mục ảnh chính xác!")
+        print("\n2. Found the correct image directories.")
         
-        # Tạo file YAML lưu ngay tại thư mục hiện tại (cùng chỗ với file train.py)
+        # Write the dataset YAML at the project root
         data_yaml = {
             'train': train_dir,
             'val': val_dir,
             'nc': 1,
             'names': {0: 'head'}
         }
-        yaml_path = 'scut_data.yaml' 
+        yaml_path = os.path.join(PROJECT_ROOT, 'scut_data.yaml')
         with open(yaml_path, 'w') as f:
             yaml.dump(data_yaml, f, sort_keys=False)
-        print(f"✅ Đã tạo file {yaml_path}.")
+        print(f"[INFO] Created dataset config: {yaml_path}")
 
-        print("\n3. Bắt đầu quá trình rèn luyện cường độ cao...")
-        # Khởi tạo "não bộ" sơ khai của YOLO11s
-        model = YOLO('yolo11s.pt')
+        print("\n3. Starting training...")
+        # Load the base YOLO11s weights from the local project if available
+        local_weights = os.path.join(PROJECT_ROOT, 'models', 'pretrained', 'yolo11s.pt')
+        model = YOLO(local_weights if os.path.exists(local_weights) else 'yolo11s.pt')
 
-        # Bắt đầu quá trình rèn luyện
+        # Start training
         results = model.train(
             data=yaml_path,
             epochs=100,         
             imgsz=1280,         
             batch=4,            
-            device=0,           # Kích hoạt Card đồ họa rời (NVIDIA GPU) trên máy
+            device=0,           # Use the discrete NVIDIA GPU
             patience=20,        
             optimizer='auto',   
             cos_lr=True,        
             
-            # --- CÁC THÔNG SỐ ÉP XUNG CHO SCUT-HEAD (Giữ nguyên) ---
+            # --- SCUT-HEAD tuning parameters ---
             box=7.5,            
             cls=0.5,            
             dfl=1.5,            
             mosaic=1.0,         
             
-            # --- LƯU THẲNG VÀO THƯ MỤC LOCAL ---
-            project='SCUT_HEAD_RUNS',  # Sẽ tự động tạo thư mục này ngay cạnh file train.py
-            name='yolo11s_ultimate_head'
+            # --- Save outputs in the standard project runs folder ---
+            project=os.path.join(PROJECT_ROOT, 'outputs', 'runs'),
+            name='train_head'
         )
 
-        print("\n🎉 Đã train xong! File best.pt của bạn nằm trong thư mục: SCUT_HEAD_RUNS/yolo11s_ultimate_head/weights/")
+        print("\n[INFO] Training complete.")
+        print("[INFO] Best weights: outputs/runs/train_head/weights/best.pt")
     else:
-        print("\n❌ Cảnh báo: Không tìm thấy thư mục 'images' trong bộ dataset này.")
+        print("\n[WARNING] Could not find the 'images' directories in this dataset.")
