@@ -196,6 +196,46 @@ MODEL_NAME = os.path.join(PROJECT_ROOT, "outputs/runs/train_head/weights/best.pt
 
 Then run `python src/app.py` again to see improved counting accuracy!
 
+### Training on SCUT-HEAD (Kaggle)
+
+If you are training directly from the SCUT-HEAD dataset on Kaggle, there is a convenience script `src/train_ver2.py` that will download the dataset via `kagglehub`, generate a temporary `scut_data.yaml`, and start training automatically.
+
+- Requirements: ensure `kagglehub` is installed (it is included in `requirements.txt`). If you need to authenticate with Kaggle, follow your normal Kaggle credential setup (API token or environment config).
+- Run:
+
+```bash
+# from project root
+python src/train_ver2.py
+```
+
+- What it does:
+  - downloads `hoangxuanviet/scut-head` into the local cache
+  - scans the dataset for `train` / `valid` image folders and writes `scut_data.yaml` at the project root
+  - starts training and saves results to `outputs/runs/train_head/`
+
+- Notes:
+  - If a local pretrained `models/pretrained/yolo11s.pt` exists it will be used, otherwise Ultralytics will try to download the base weights.
+  - If the script cannot find expected `images` folders it will warn and exit. In that case, download the dataset manually and place it under `data/datasets/Head_Counting_System/` or run `src/prepare_data.py` after extracting the raw sources.
+
+Additional quick commands (local)
+
+```bash
+# activate the conda env used on your machine (example: `ai`)
+conda activate ai
+
+# ensure dependencies are installed
+pip install -r requirements.txt
+
+# run the convenience trainer that downloads SCUT-HEAD and starts training
+python src/train_ver2.py
+```
+
+What to expect:
+- `scut_data.yaml` will be written to the project root by `train_ver2.py`.
+- Training outputs (weights, results.png, val predictions) will be saved to `outputs/runs/train_head/`.
+- `train_ver2.py` defaults to `device=0` (GPU 0); change the script if you need to use CPU or a different GPU index.
+
+
 ---
 
 ## ⚙️ Configuration
