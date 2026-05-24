@@ -11,7 +11,7 @@ Usage:
 
 Output:
     - Real-time display window with IDs (press 'q' to exit early)
-    - Annotated video saved to runs/detect/track/
+    - Annotated video saved to outputs/track/
 """
 
 import sys
@@ -22,11 +22,11 @@ from ultralytics import YOLO
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = "/home/hoinguyen/Downloads/best.pt"       # Balanced speed/accuracy model
+MODEL_NAME = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "runs", "train_head", "weights", "best.pt")       # Balanced speed/accuracy model
 CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = "../data/raw/TownCentreXVID.mp4"
+DEFAULT_VIDEO_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "raw", "TownCentreXVID.mp4")
 TRACKER_TYPE = "bytetrack.yaml" # Use ByteTrack for object tracking
 
 
@@ -68,9 +68,10 @@ def run_tracking(video_path: str) -> None:
 
     - Tracks class 0 (person) using ByteTrack.
     - Displays annotated frames with IDs in a real-time window.
-    - Saves the annotated video to runs/detect/track/.
+    - Saves the annotated video to outputs/track/.
     """
     model = YOLO(MODEL_NAME)
+    output_root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs")
 
     print("[INFO] Starting tracking... Press 'q' on the video window to exit early.")
     print()
@@ -86,6 +87,9 @@ def run_tracking(video_path: str) -> None:
         persist=True,       # <--- Crucial for tracking IDs
         show=True,          # Display real-time window
         save=True,          # Save annotated video
+        project=output_root,
+        name="track",
+        exist_ok=True,
         device=GPU_DEVICE,
         stream=True,        # <--- Prevents RAM overflow
     ):
@@ -97,7 +101,7 @@ def print_checklist() -> None:
     print()
     print("=" * 55)
     print("  Step 2 Complete!")
-    print("  Output saved to: runs/detect/track/")
+    print("  Output saved to: outputs/track/")
     print("=" * 55)
     print()
     print("  Evaluation Checklist:")

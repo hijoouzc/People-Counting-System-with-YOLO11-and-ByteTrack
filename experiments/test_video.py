@@ -11,7 +11,7 @@ Usage:
 
 Output:
     - Real-time display window (press 'q' to exit early)
-    - Annotated video saved to runs/detect/predict/
+    - Annotated video saved to outputs/predict/
 """
 
 import sys
@@ -22,11 +22,11 @@ from ultralytics import YOLO
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = "yolo11s.pt"       # Balanced speed/accuracy model
+MODEL_NAME = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "runs", "train_head", "weights", "best.pt")       # Balanced speed/accuracy model
 CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = "data/TownCentreXVID.mp4"
+DEFAULT_VIDEO_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "raw", "TownCentreXVID.mp4")
 
 
 # ============================================================
@@ -66,9 +66,10 @@ def run_detection(video_path: str) -> None:
 
     - Detects only class 0 (person) from the COCO dataset.
     - Displays annotated frames in a real-time window.
-    - Saves the annotated video to runs/detect/predict/.
+    - Saves the annotated video to outputs/predict/.
     """
     model = YOLO(MODEL_NAME)
+    output_root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs")
 
     print("[INFO] Starting detection... Press 'q' on the video window to exit early.")
     print()
@@ -79,7 +80,10 @@ def run_detection(video_path: str) -> None:
         classes=[PERSON_CLASS_ID],
         conf=CONFIDENCE_THRESHOLD,
         show=True,          # Display real-time window
-        save=True,          # Save annotated video to runs/detect/predict/
+        save=True,          # Save annotated video to outputs/predict/
+        project=output_root,
+        name="predict",
+        exist_ok=True,
         device=GPU_DEVICE,
         stream=True,        # <--- Prevents RAM overflow
     ):
@@ -91,7 +95,7 @@ def print_checklist() -> None:
     print()
     print("=" * 55)
     print("  Step 1 Complete!")
-    print("  Output saved to: runs/detect/predict/")
+    print("  Output saved to: outputs/predict/")
     print("=" * 55)
     print()
     print("  Evaluation Checklist:")

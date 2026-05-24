@@ -7,7 +7,7 @@ Purpose:
 
 Usage:
     python test_image.py
-    python test_image.py data/image.png
+    python test_image.py data/raw/image.png
 
 Output:
     - Annotated image saved to outputs/test_image/
@@ -26,11 +26,11 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = os.path.join(ROOT_DIR, "/home/hoinguyen/Downloads/best.pt")  # Fine-tuned head detection model
+MODEL_NAME = os.path.join(ROOT_DIR, "outputs", "runs", "train_head", "weights", "best.pt")  # Fine-tuned head detection model
 CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_IMAGE_PATH = os.path.join(ROOT_DIR, "data/image.png")
+DEFAULT_IMAGE_PATH = os.path.join(ROOT_DIR, "data", "raw", "image.png")
 OUTPUT_DIR = os.path.join(ROOT_DIR, "outputs")  # Project-controlled output root
 
 
@@ -72,7 +72,7 @@ def print_detection_summary(results) -> None:
 
     print()
     print(f"  Inference speed: {results[0].speed['inference']:.1f} ms")
-    print(f"  Output saved to: outputs/test_image/")
+    print(f"  Output saved to: {os.path.join('outputs', 'test_image')}/")
     print("=" * 55)
 
 
@@ -101,6 +101,9 @@ def main():
         classes=[PERSON_CLASS_ID],
         conf=CONFIDENCE_THRESHOLD,
         save=False,
+        project=OUTPUT_DIR,
+        name="test_image",
+        exist_ok=True,
         device=GPU_DEVICE,
     )
 
