@@ -33,6 +33,7 @@ data/datasets/
 
 # Outputs
 outputs/
+experiments/runs/
 
 # Models
 models/pretrained/*.pt
