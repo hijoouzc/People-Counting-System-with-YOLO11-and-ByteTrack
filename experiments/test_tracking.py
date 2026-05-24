@@ -22,11 +22,11 @@ from ultralytics import YOLO
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = "yolo11s.pt"       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence (30%)
+MODEL_NAME = "/home/hoinguyen/Downloads/best.pt"       # Balanced speed/accuracy model
+CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = "data/TownCentreXVID.mp4"
+DEFAULT_VIDEO_PATH = "../data/raw/TownCentreXVID.mp4"
 TRACKER_TYPE = "bytetrack.yaml" # Use ByteTrack for object tracking
 
 

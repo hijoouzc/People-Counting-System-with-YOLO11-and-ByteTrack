@@ -26,7 +26,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = os.path.join(ROOT_DIR, "outputs/runs/train_head/weights/best.pt")  # Fine-tuned head detection model
+MODEL_NAME = os.path.join(ROOT_DIR, "/home/hoinguyen/Downloads/best.pt")  # Fine-tuned head detection model
 CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"

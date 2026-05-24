@@ -1,10 +1,10 @@
-# YOLO Dataset Configuration for Head Detection
-# Dataset: Oxford Town Centre (Head Annotations)
+# YOLO Dataset Configuration for Head Counting
+# Dataset: Head_Counting_System
 
-path: data/datasets/towncentre_head  # dataset root dir (relative to execution dir)
-train: images/train  # train images (relative to 'path')
-val: images/val      # val images (relative to 'path')
+path: data/datasets/Head_Counting_System
+train: train/images
+val: valid/images
+test: test/images
 
-# Classes
-nc: 1  # number of classes
-names: ['head']  # class names
+nc: 1
+names: ['head']

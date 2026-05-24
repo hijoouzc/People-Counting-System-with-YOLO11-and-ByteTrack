@@ -28,13 +28,13 @@ def main():
     
     # Train the model
     # Note for RTX 4050 6GB:
-    # - batch=8 is safe, batch=16 might OOM depending on other running apps.
-    # - imgsz=640 is standard and performant.
+    # - imgsz=1280 helps with small heads.
+    # - batch=1 is the safest setting to avoid CUDA OOM on this GPU.
     results = model.train(
         data=data_cfg,
         epochs=50,          # 50 epochs is enough for a strong baseline
-        imgsz=640,          # Image size
-        batch=4,            # Batch size (safe for 6GB VRAM)
+        imgsz=1280,         # Higher image size for small head objects
+        batch=4,            # Keep memory use low at 1280 resolution
         device=0,           # Use GPU 0
         amp=False,          # Disable AMP (Mixed Precision) to prevent CUDA kernel crash on laptop GPU
         project=project_dir,
