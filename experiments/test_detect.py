@@ -22,11 +22,15 @@ from ultralytics import YOLO
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "runs", "train_head", "weights", "best.pt")       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence (30%)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best(1).pt")       # Balanced speed/accuracy model
+CONFIDENCE_THRESHOLD = 0.15      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "raw", "TownCentreXVID.mp4")
+DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
 
 
 # ============================================================
@@ -69,7 +73,6 @@ def run_detection(video_path: str) -> None:
     - Saves the annotated video to outputs/predict/.
     """
     model = YOLO(MODEL_NAME)
-    output_root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs")
 
     print("[INFO] Starting detection... Press 'q' on the video window to exit early.")
     print()
@@ -81,7 +84,7 @@ def run_detection(video_path: str) -> None:
         conf=CONFIDENCE_THRESHOLD,
         show=True,          # Display real-time window
         save=True,          # Save annotated video to outputs/predict/
-        project=output_root,
+        project=OUTPUT_DIR,
         name="predict",
         exist_ok=True,
         device=GPU_DEVICE,

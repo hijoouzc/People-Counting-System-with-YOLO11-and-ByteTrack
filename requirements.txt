@@ -3,3 +3,6 @@ kagglehub
 opencv-python-headless
 numpy
 pandas
+sahi
+albumentations
+supervision

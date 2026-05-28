@@ -19,19 +19,18 @@ import os
 import cv2
 from ultralytics import YOLO
 
-# Project root (one level up from this experiments/ directory)
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = os.path.join(ROOT_DIR, "outputs", "runs", "train_head", "weights", "best.pt")  # Fine-tuned head detection model
-CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best.pt")  # Fine-tuned head detection model
+CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_IMAGE_PATH = os.path.join(ROOT_DIR, "data", "raw", "image.png")
-OUTPUT_DIR = os.path.join(ROOT_DIR, "outputs")  # Project-controlled output root
+DEFAULT_IMAGE_PATH = os.path.join(PROJECT_ROOT, "data/image.png")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")  # Project-controlled output root
 
 
 # ============================================================

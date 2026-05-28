@@ -22,12 +22,16 @@ from ultralytics import YOLO
 # ============================================================
 # Configuration
 # ============================================================
-MODEL_NAME = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "runs", "train_head", "weights", "best.pt")       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.25      # Minimum detection confidence (30%)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best.pt")       # Balanced speed/accuracy model
+CONFIDENCE_THRESHOLD = 0.15      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "raw", "TownCentreXVID.mp4")
+DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentreXVID.mp4")
 TRACKER_TYPE = "bytetrack.yaml" # Use ByteTrack for object tracking
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
 
 
 # ============================================================
@@ -71,7 +75,6 @@ def run_tracking(video_path: str) -> None:
     - Saves the annotated video to outputs/track/.
     """
     model = YOLO(MODEL_NAME)
-    output_root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs")
 
     print("[INFO] Starting tracking... Press 'q' on the video window to exit early.")
     print()
@@ -87,7 +90,7 @@ def run_tracking(video_path: str) -> None:
         persist=True,       # <--- Crucial for tracking IDs
         show=True,          # Display real-time window
         save=True,          # Save annotated video
-        project=output_root,
+        project=OUTPUT_DIR,
         name="track",
         exist_ok=True,
         device=GPU_DEVICE,

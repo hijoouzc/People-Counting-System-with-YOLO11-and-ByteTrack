@@ -29,8 +29,8 @@ from ultralytics.solutions.object_counter import ObjectCounter
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-MODEL_NAME = os.path.join(PROJECT_ROOT, "outputs/runs/train_head/weights/best.pt")
-CONFIDENCE_THRESHOLD = 0.3
+MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best.pt")
+CONFIDENCE_THRESHOLD = 0.15
 PERSON_CLASS_ID = 0
 DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentreXVID.mp4")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs/count")
