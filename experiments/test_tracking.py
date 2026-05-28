@@ -25,11 +25,11 @@ from ultralytics import YOLO
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best.pt")       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.15      # Minimum detection confidence
+MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")       # Balanced speed/accuracy model
+CONFIDENCE_THRESHOLD = 0.30      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentreXVID.mp4")
+DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
 TRACKER_TYPE = "bytetrack.yaml" # Use ByteTrack for object tracking
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
 

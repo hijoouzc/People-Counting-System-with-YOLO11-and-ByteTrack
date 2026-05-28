@@ -25,7 +25,7 @@ from ultralytics import YOLO
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-MODEL_NAME = os.path.join(PROJECT_ROOT, "/home/hoinguyen/Downloads/best.pt")  # Fine-tuned head detection model
+MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")  # Fine-tuned head detection model
 CONFIDENCE_THRESHOLD = 0.3      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
