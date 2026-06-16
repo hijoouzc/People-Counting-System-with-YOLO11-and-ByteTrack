@@ -16,10 +16,10 @@ from ultralytics import YOLO
 # Configuration (Paths are relative to project root)
 # ============================================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 
 MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")
-CONFIDENCE_THRESHOLD = 0.15
+CONFIDENCE_THRESHOLD = 0.3
 DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs/count")
 
@@ -114,8 +114,9 @@ def run_counting(video_path: str, max_frames: int | None = None) -> None:
             frame_count += 1
             tracked_count_this_frame = 0
 
-            # Run Tracking
-            results = model.track(frame, persist=True, tracker="bytetrack.yaml", conf=CONFIDENCE_THRESHOLD, verbose=False)[0]
+            # Run Tracking (Using custom config with higher track_buffer)
+            custom_tracker_path = os.path.join(PROJECT_ROOT, "configs", "custom_tracker.yaml")
+            results = model.track(frame, persist=True, tracker=custom_tracker_path, conf=CONFIDENCE_THRESHOLD, verbose=False)[0]
 
             # 1. Draw diagonal counting line and buffer zone
             cv2.line(frame, LINE_START, LINE_END, (0, 255, 255), 3) # Main line (Yellow)

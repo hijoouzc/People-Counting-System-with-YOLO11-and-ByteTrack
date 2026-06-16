@@ -1,0 +1,16 @@
+tracker_type: botsort
+track_high_thresh: 0.4
+track_low_thresh: 0.1
+new_track_thresh: 0.6
+track_buffer: 60      # Giảm lại 60 để không giữ rác quá lâu
+match_thresh: 0.8
+fuse_score: True       # Cần thiết cho phiên bản Ultralytics hiện tại
+
+# BoT-SORT specifics
+gmc_method: sparseOptFlow
+
+# ReID model related thresh
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: False
+model: auto

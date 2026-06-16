@@ -1,19 +1,17 @@
-# 🚶 Crowd Tracking System with YOLO11, SAHI, and ByteTrack
+# 🚶 Crowd Tracking System with YOLO11, SAHI, and BoT-SORT
 
-A robust pedestrian counting system engineered to handle dense crowds and occlusions in high-resolution video streams. This system leverages **YOLO11s**, **SAHI** (Slicing Aided Hyper Inference) for detecting small objects in high-resolution frames, and **ByteTrack** for stable identity tracking.
+A highly robust pedestrian counting system engineered to handle dense crowds and occlusions in high-resolution video streams. This system leverages **YOLO11s**, **SAHI** (Slicing Aided Hyper Inference) for detecting extremely small objects in 1080p frames, and **BoT-SORT / ByteTrack** for stable identity tracking.
 
-The project features a **Clean Architecture** with a fully automated, two-stage training pipeline transitioning from the **SCUT-HEAD** dataset to the massive **CrowdHuman** dataset.
+It utilizes an advanced mathematical **Buffer Zone** technique via cross-products to eliminate counting flicker, guaranteeing highly accurate directional counting (IN/OUT) across a custom diagonal counting line.
 
 ---
 
 ## ✨ Key Features
-- **SAHI Integration**: Slices high-resolution frames (e.g., 1080p) into smaller grid patches (640x640) to detect tiny heads that standard YOLO would miss.
-- **Two-Stage Training**: 
-  - *Stage 1*: Pre-train YOLO11s on SCUT-HEAD (imgsz=1280) for robust head detection.
-  - *Stage 2*: Fine-tune on CrowdHuman (imgsz=640) to synchronize with SAHI slicing geometry.
-- **ByteTrack & Supervision**: Seamless tracking and counting logic using Roboflow's powerful `supervision` library.
-- **Automated Data Prep**: Directly fetches and converts datasets from Kaggle using `kagglehub`.
-- **Memory Optimized**: Frame-by-frame generator-based video processing to prevent RAM overload.
+- **SAHI Integration**: Slices high-resolution frames into smaller grids to detect tiny heads that standard YOLO misses, reducing false negatives drastically.
+- **Custom Tracker Tuning**: Implemented customized BoT-SORT and ByteTrack configurations (`track_buffer` tuned to 60-120 frames) to minimize Identity Switches (ID Fragmentation) in crowded occlusions.
+- **Buffer Zone Counting**: Prevents multiple counts (flickering) when a person lingers on the counting line. Achieves **97-100% OUT Counting Accuracy**.
+- **Automated Ground Truth Evaluation**: A robust evaluation pipeline that automatically parses Oxford TownCentre ground truth `.top` files and compares them frame-by-frame against the AI predictions to compute Total Unique IDs and Directional Accuracy.
+- **Two-Stage Training**: Clean architecture transitioning from SCUT-HEAD (imgsz=1280) to CrowdHuman (imgsz=640).
 
 ---
 
@@ -22,25 +20,21 @@ The project features a **Clean Architecture** with a fully automated, two-stage 
 ```text
 Person-Counting/
 ├── archive/                  # Legacy code and experiments
-├── configs/                  # Auto-generated dataset configurations
+├── configs/                  # Tracker and Dataset configurations
 │   ├── scut_data.yaml        
-│   └── crowdhuman_data.yaml  
-├── data/                     
-│   ├── crowdhuman_yolo/      # Prepared CrowdHuman YOLO format
-│   └── raw/                  # Source videos (e.g., TownCentreXVID.mp4)
-├── models/                   
-│   ├── stage1_scut/          # Stage 1 weights
-│   └── stage2_crowdhuman/    # Stage 2 weights
-├── outputs/                  # Annotated output videos
+│   ├── crowdhuman_data.yaml  
+│   └── custom_tracker.yaml   # Tuned BoT-SORT parameters for dense crowds
+├── data/raw/                 # Source videos (e.g., TownCentre_1min.mp4) & GT
+├── models/trained/           # Pre-trained YOLO weights (HeadDetect_v1.pt)
+├── outputs/count/            # Tracking videos, CSV logs, and detection logs
 ├── src/                      # Core Source Code
-│   ├── data_prep/            
-│   │   ├── prep_scut.py      
-│   │   └── prep_crowd.py     
-│   ├── training/             
-│   │   ├── train_stage1.py   
-│   │   └── train_stage2.py   
-│   └── inference/            
-│       └── track_sahi.py     
+│   ├── data_prep/            # Kaggle data fetchers
+│   ├── training/             # Stage 1 and Stage 2 training pipelines
+│   ├── inference/            
+│   │   ├── track_standard.py # Baseline YOLO + BoT-SORT tracking
+│   │   └── track_sahi.py     # Advanced SAHI + ByteTrack tracking
+│   └── evaluation/           
+│       └── evaluate.py       # Ground truth accuracy validation script
 ├── requirements.txt
 └── README.md
 ```
@@ -51,7 +45,6 @@ Person-Counting/
 
 - Python 3.10+
 - CUDA-capable GPU (Tested on NVIDIA RTX 4050 / T4)
-- Recommended environment: `conda`
 
 ```bash
 # Create and activate environment
@@ -67,67 +60,53 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Pipeline Usage
+## 🚀 Inference & Tracking
 
-The pipeline is divided into three distinct phases. Ensure you run them sequentially from the root project directory.
+You can choose between the Standard YOLO approach and the highly accurate SAHI approach.
 
-### Phase 1: Data Preparation
-Automatically fetch datasets from Kaggle and format them for YOLO.
+### 1. Standard YOLO Tracking (`track_standard.py`)
+Uses the tuned BoT-SORT tracker defined in `configs/custom_tracker.yaml`. Fast, but struggles with tiny heads in the distance.
 ```bash
-# Prepare SCUT-HEAD dataset (Stage 1)
-python src/data_prep/prep_scut.py
-
-# Prepare CrowdHuman dataset (Stage 2)
-# Note: Downloads ~30GB of data and converts JSON to YOLO format
-python src/data_prep/prep_crowd.py
+python src/inference/track_standard.py
 ```
 
-### Phase 2: Model Training
-Train the head detection architecture across two datasets.
+### 2. SAHI Tracking (`track_sahi.py`)
+Uses Slicing Aided Hyper Inference combined with a tuned `sv.ByteTrack` (`lost_track_buffer=60`). This is the recommended approach for dense, high-resolution crowds like the TownCentre dataset.
 ```bash
-# Stage 1: Base training on SCUT-HEAD (High-res 1280)
-python src/training/train_stage1.py
-
-# Stage 2: Fine-tuning on CrowdHuman (SAHI-compatible 640)
-# Supports resuming via --resume flag
-python src/training/train_stage2.py
-```
-
-### Phase 3: Inference & Tracking
-Run the SAHI + ByteTrack inference pipeline on your video. Place your input video in `data/raw/` (e.g., `TownCentreXVID.mp4`).
-
-```bash
-# Run tracking with default paths
 python src/inference/track_sahi.py
-
-# Run tracking on a custom video
-python src/inference/track_sahi.py \
-    --video data/raw/my_video.mp4 \
-    --model models/stage2_crowdhuman/run_1/weights/best.pt \
-    --output outputs/my_output.mp4
 ```
 
-> **Note on Counting Line:** The counting line (`LineZone`) is hardcoded in `src/inference/track_sahi.py` for the default `TownCentreXVID.mp4` camera angle. Adjust `start_pt` and `end_pt` inside the script to match your specific video angle.
+Outputs will be saved in `outputs/count/` including:
+- Annotated `.mp4` video with HUD.
+- Per-frame counts and detection coordinates `.csv`/`.txt`.
+
+---
+
+## 📊 Evaluation & Metrics
+
+Once inference is complete, evaluate the model against the human-labeled ground truth using the built-in evaluation script:
+
+```bash
+python src/evaluation/evaluate.py
+```
+
+### Recent Benchmark (TownCentre - 1500 frames)
+| Metric | Standard YOLO (`track_standard.py`) | SAHI + YOLO (`track_sahi.py`) |
+|--------|-------------------------------------|-------------------------------|
+| **Total Unique IDs** | 153 (Error: 63) | **136** (Error: 46) |
+| **IN Accuracy** | 80.77% | **92.31%** |
+| **OUT Accuracy** | 97.06% | **100.00%** |
+| **Overall Accuracy** | 65.43% | **80.40%** |
+
+*Note: The Ground Truth contains 90 distinct people. Object trackers frequently exceed this number due to ID Switches during prolonged occlusions, but our tuned `lost_track_buffer` greatly reduces this fragmentation.*
 
 ---
 
 ## 🛠 Tech Stack
-- **Ultralytics**: YOLO11 architecture
+- **Ultralytics**: YOLO11 architecture & BoT-SORT
 - **SAHI**: Slicing Aided Hyper Inference
-- **Supervision**: Advanced computer vision tracking (ByteTrack) and annotations
+- **Supervision**: Advanced computer vision tracking (ByteTrack)
 - **Kagglehub**: Dataset acquisition
-
----
-
-## 🗺 Roadmap
-- [x] Integrate SAHI for micro-head detection
-- [x] Standardize training pipeline to Clean Architecture
-- [x] Integrate Supervision ByteTrack for seamless counting
-- [ ] Add RTSP stream processing
-- [ ] Implement polygon zones (Region counting)
-- [ ] Speed estimation using calibration data
-
----
 
 ## 📄 License
 This project is for research and educational purposes.

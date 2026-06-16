@@ -52,7 +52,7 @@ def track_video(video_path, model_path, output_dir):
         detection_model = AutoDetectionModel.from_pretrained(
             model_type='yolov8', 
             model_path=model_path,
-            confidence_threshold=0.15,
+            confidence_threshold=0.3,
             device="cuda:0"
         )
         print("[INFO] Model successfully loaded onto GPU.")
@@ -65,8 +65,12 @@ def track_video(video_path, model_path, output_dir):
             device="cpu"
         )
 
-    # Initialize ByteTrack from supervision
-    tracker = sv.ByteTrack()
+    # Initialize ByteTrack from supervision with tuned parameters
+    tracker = sv.ByteTrack(
+        track_activation_threshold=0.4,  # Tương đương track_high_thresh
+        lost_track_buffer=60,            # Giữ track bị mất dấu tối đa 60 frames
+        minimum_matching_threshold=0.8   # Tương đương match_thresh
+    )
 
     if not os.path.exists(video_path):
         print(f"[ERROR] Video file not found: {video_path}")
@@ -75,9 +79,9 @@ def track_video(video_path, model_path, output_dir):
     # Setup Output Directories
     os.makedirs(output_dir, exist_ok=True)
     out_video_path = os.path.join(output_dir, "tracking_sahi_output.mp4")
-    out_csv_path = os.path.join(output_dir, "summary.csv")
-    perframe_csv = os.path.join(output_dir, "counts_per_frame.csv")
-    detections_txt = os.path.join(output_dir, "detections_per_frame.txt")
+    out_csv_path = os.path.join(output_dir, "sahi_summary.csv")
+    perframe_csv = os.path.join(output_dir, "sahi_counts_per_frame.csv")
+    detections_txt = os.path.join(output_dir, "sahi_detections_per_frame.txt")
 
     cap = cv2.VideoCapture(video_path)
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -187,6 +191,7 @@ def track_video(video_path, model_path, output_dir):
             # HUD Display
             cv2.putText(frame, f"IN (Down): {count_in}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
             cv2.putText(frame, f"OUT (Up): {count_out}", (30, 110), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+            cv2.putText(frame, f"In Frame: {tracked_count_this_frame}", (30, 160), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 0), 3)
 
             video_writer.write(frame)
             
