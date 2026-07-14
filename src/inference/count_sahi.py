@@ -230,7 +230,7 @@ if __name__ == '__main__':
     
     default_video = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
     default_model = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")
-    default_output = os.path.join(PROJECT_ROOT, "outputs/count")
+    default_output = os.path.join(PROJECT_ROOT, "outputs/count_sahi")
     
     parser.add_argument("--video", type=str, default=default_video, help="Path to input video")
     parser.add_argument("--model", type=str, default=default_model, help="Path to model weights (.pt)")

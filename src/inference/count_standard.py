@@ -20,15 +20,15 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 
 MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")
 CONFIDENCE_THRESHOLD = 0.3
-DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs/count")
+DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/Screencast from 2026-07-10 17-15-03.mp4")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs/count_standard")
 
 # ============================================================
 # Counting Line Configuration (Diagonal Line Support)
 # ============================================================
 # Define two endpoints of the counting line
-LINE_START = (0, 250)       # Left endpoint  (x, y)
-LINE_END   = (1920, 550)    # Right endpoint (x, y)
+LINE_START = (0, 550)       # Left endpoint  (x, y)
+LINE_END   = (1920, 400)    # Right endpoint (x, y)
 BUFFER = 15                 # Buffer distance (in pixels) to prevent flickering
 
 
@@ -116,7 +116,7 @@ def run_counting(video_path: str, max_frames: int | None = None) -> None:
 
             # Run Tracking (Using custom config with higher track_buffer)
             custom_tracker_path = os.path.join(PROJECT_ROOT, "configs", "custom_tracker.yaml")
-            results = model.track(frame, persist=True, tracker=custom_tracker_path, conf=CONFIDENCE_THRESHOLD, verbose=False)[0]
+            results = model.track(frame, persist=True, tracker=custom_tracker_path, conf=CONFIDENCE_THRESHOLD, verbose=False, imgsz=1024)[0]
 
             # 1. Draw diagonal counting line and buffer zone
             cv2.line(frame, LINE_START, LINE_END, (0, 255, 255), 3) # Main line (Yellow)

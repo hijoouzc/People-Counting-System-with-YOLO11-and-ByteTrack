@@ -23,10 +23,10 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 
 GROUND_TRUTH_FILE = os.path.join(PROJECT_ROOT, "data/raw/TownCentre-groundtruth.top")
-AI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count/summary.csv")
-SAHI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count/sahi_summary.csv")
-AI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count/detections_per_frame.txt")
-SAHI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count/sahi_detections_per_frame.txt")
+AI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count_standard/summary.csv")
+SAHI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count_sahi/sahi_summary.csv")
+AI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count_standard/detections_per_frame.txt")
+SAHI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count_sahi/sahi_detections_per_frame.txt")
 
 # Counting line endpoints — must mirror app.py
 LINE_START = (0, 250)       # Left endpoint  (x, y)
