@@ -31,12 +31,12 @@ def train_stage2(resume=False, model_path=None):
 
     # Initialize model based on Stage 1 best weights (if available)
     if model_path is None:
-        model_path = os.path.join(PROJECT_ROOT, "models/stage1_scut/yolo11s_ultimate_head/weights/best.pt")
+        model_path = os.path.join(PROJECT_ROOT, "models/stage1_scut/yolo26m_ultimate_head/weights/best.pt")
     
     if not os.path.exists(model_path):
         print(f"[WARNING] Stage 1 model not found at {model_path}.")
-        print("[INFO] Falling back to the base yolo11s.pt model.")
-        model_path = 'yolo11s.pt'
+        print("[INFO] Falling back to the base yolo26m.pt model.")
+        model_path = 'yolo26m.pt'
         
     model = YOLO(model_path)
     print(f"[INFO] Loaded model: {model_path}")
@@ -46,7 +46,7 @@ def train_stage2(resume=False, model_path=None):
         data=data_yaml,
         epochs=50,          # 50 epochs is sufficient for this large dataset
         imgsz=640,          # Resolution 640 to synchronize with SAHI slicing grid
-        batch=16,           # Optimized batch size for VRAM efficiency
+        batch=4,            # Reduced batch size to 4 for YOLO26m to prevent VRAM overflow
         rect=False,         # Square images matching SAHI slice geometry
         device=0,           # Use GPU
         

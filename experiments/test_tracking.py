@@ -29,7 +29,7 @@ MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")      
 CONFIDENCE_THRESHOLD = 0.30      # Minimum detection confidence
 GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
 PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/TownCentre_1min.mp4")
+DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/Screencast from 2026-07-10 17-15-03.mp4")
 TRACKER_TYPE = "bytetrack.yaml" # Use ByteTrack for object tracking
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
 
@@ -95,6 +95,8 @@ def run_tracking(video_path: str) -> None:
         exist_ok=True,
         device=GPU_DEVICE,
         stream=True,        # <--- Prevents RAM overflow
+        line_width=1,       # Thinner bounding boxes and smaller text
+        imgsz=1024,         # Increase input resolution to detect small objects better
     ):
         pass
 

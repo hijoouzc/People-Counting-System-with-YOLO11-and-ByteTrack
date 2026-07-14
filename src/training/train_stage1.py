@@ -12,7 +12,7 @@ def train_stage1():
         return
 
     # Initialize base model
-    model = YOLO('yolo11s.pt')
+    model = YOLO('yolo26m.pt')
     
     save_dir = os.path.join(PROJECT_ROOT, "models/stage1_scut")
     os.makedirs(save_dir, exist_ok=True)
@@ -22,7 +22,7 @@ def train_stage1():
         data=data_yaml,
         epochs=100,         # Deep training for initial feature extraction
         imgsz=1280,         # High resolution for top-down camera views
-        batch=4,            # Safe batch size for T4/RTX4050 GPUs
+        batch=2,            # Reduced batch size for yolo26m on 6GB VRAM GPUs (RTX 4050)
         device=0,           # Use first GPU
         patience=20,        # Early stopping patience
         optimizer='auto',
@@ -35,10 +35,10 @@ def train_stage1():
         mosaic=1.0,         # Maximize mosaic augmentation for dense crowds
         
         project=save_dir,
-        name='yolo11s_ultimate_head'
+        name='yolo26m_ultimate_head'
     )
     
-    print(f"\n[SUCCESS] Stage 1 completed! Model weights saved at: {save_dir}/yolo11s_ultimate_head/weights/")
+    print(f"\n[SUCCESS] Stage 1 completed! Model weights saved at: {save_dir}/yolo26m_ultimate_head/weights/")
 
 if __name__ == "__main__":
     train_stage1()
