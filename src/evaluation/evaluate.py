@@ -12,25 +12,32 @@ Usage:
     python evaluate.py
 """
 
+import sys
 import os
 import csv
 from collections import defaultdict
+from pathlib import Path
+
+# Dynamically resolve project root and add to sys.path
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from src.utils.config import InferenceConfig, ProjectPaths
 
 # ============================================================
-# Configuration — MUST match app.py and track_sahi.py exactly
+# Configuration — inherited from ProjectPaths and InferenceConfig
 # ============================================================
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+GROUND_TRUTH_FILE = str(ProjectPaths.RAW_DATA_DIR / "TownCentre-groundtruth.top")
+AI_SUMMARY_FILE = str(ProjectPaths.OUTPUTS_DIR / "count_standard/summary.csv")
+SAHI_SUMMARY_FILE = str(ProjectPaths.OUTPUTS_DIR / "count_sahi/sahi_summary.csv")
+AI_DETECTIONS_FILE = str(ProjectPaths.OUTPUTS_DIR / "count_standard/detections_per_frame.txt")
+SAHI_DETECTIONS_FILE = str(ProjectPaths.OUTPUTS_DIR / "count_sahi/sahi_detections_per_frame.txt")
 
-GROUND_TRUTH_FILE = os.path.join(PROJECT_ROOT, "data/raw/TownCentre-groundtruth.top")
-AI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count_standard/summary.csv")
-SAHI_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "outputs/count_sahi/sahi_summary.csv")
-AI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count_standard/detections_per_frame.txt")
-SAHI_DETECTIONS_FILE = os.path.join(PROJECT_ROOT, "outputs/count_sahi/sahi_detections_per_frame.txt")
-
-# Counting line endpoints — must mirror app.py
-LINE_START = (0, 250)       # Left endpoint  (x, y)
-LINE_END   = (1920, 550)    # Right endpoint (x, y)
+config = InferenceConfig()
+# Counting line endpoints — inherited from config.py
+LINE_START = (config.LINE_START.x, config.LINE_START.y)
+LINE_END   = (config.LINE_END.x, config.LINE_END.y)
 BUFFER = 15                 # Perpendicular buffer distance (pixels)
 
 
@@ -118,13 +125,15 @@ def simulate_gt(trajectories, max_frames):
                 old_sign = last_outside_sign[person_id]
 
                 # Crossed from ABOVE to BELOW (negative -> positive)
+                # Supervision's convention considers this OUT
                 if old_sign < 0 and sign > 0:
-                    gt_in += 1
+                    gt_out += 1
                     counted = True
 
                 # Crossed from BELOW to ABOVE (positive -> negative)
+                # Supervision's convention considers this IN
                 elif old_sign > 0 and sign < 0:
-                    gt_out += 1
+                    gt_in += 1
                     counted = True
 
             # Update saved position only when outside the buffer zone
@@ -248,15 +257,15 @@ def evaluate():
         print(f"  Total IN  (Above -> Below): {gt_in}")
         print(f"  Total OUT (Below -> Above): {gt_out}")
         print("=" * 55)
-        print("Run archive/app.py or src/inference/track_sahi.py to generate AI results.")
+        print("Run src/inference/count_standard.py or src/inference/count_sahi.py to generate AI results.")
     
     if ai_exists:
-        evaluate_results("Standard YOLO (app.py)", ai_in, ai_out, ai_max_frames, AI_DETECTIONS_FILE)
+        evaluate_results("Standard YOLO (count_standard.py)", ai_in, ai_out, ai_max_frames, AI_DETECTIONS_FILE)
     else:
         print(f"\n[WARNING] Standard AI summary file not found at {AI_SUMMARY_FILE}.")
 
     if sahi_exists:
-        evaluate_results("SAHI + YOLO (track_sahi.py)", sahi_in, sahi_out, sahi_max_frames, SAHI_DETECTIONS_FILE)
+        evaluate_results("SAHI + YOLO (count_sahi.py)", sahi_in, sahi_out, sahi_max_frames, SAHI_DETECTIONS_FILE)
     else:
         print(f"\n[WARNING] SAHI summary file not found at {SAHI_SUMMARY_FILE}.")
 

@@ -6,3 +6,5 @@ pandas
 sahi
 albumentations
 supervision
+streamlit
+plotly

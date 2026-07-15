@@ -2,122 +2,77 @@
 Step 1: Basic Video Detection Test
 ===================================
 Purpose:
-    Verify that YOLO can accurately detect pedestrians in the EarthCam video
-    using the RTX 4050 GPU. No tracking or counting logic — detection only.
-
-Usage:
-    python test_video.py
-    python test_video.py data/earthcam_video.mp4
-
-Output:
-    - Real-time display window (press 'q' to exit early)
-    - Annotated video saved to outputs/predict/
+    Verify that YOLO can accurately detect pedestrians in the video.
+    No tracking or counting logic — detection only.
 """
 
 import sys
 import os
+from pathlib import Path
 from ultralytics import YOLO
 
+# Dynamically resolve project root and add to sys.path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
-# ============================================================
-# Configuration
-# ============================================================
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
-
-MODEL_NAME = os.path.join(PROJECT_ROOT, "models/trained/HeadDetect_v1.pt")       # Balanced speed/accuracy model
-CONFIDENCE_THRESHOLD = 0.30      # Minimum detection confidence
-GPU_DEVICE = 0                  # GPU index (0 = first GPU, RTX 4050)
-PERSON_CLASS_ID = 0             # COCO class index for "person"
-DEFAULT_VIDEO_PATH = os.path.join(PROJECT_ROOT, "data/raw/Screencast from 2026-07-10 17-15-03.mp4")
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
+from src.utils.config import InferenceConfig, setup_parser
+from src.utils.video_handler import VideoHandler
 
 
-# ============================================================
-# Helper Functions
-# ============================================================
-def get_video_path() -> str:
-    """
-    Resolve video path from command-line argument or use default.
-    Exits with a clear error message if the file does not exist.
-    """
-    path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_VIDEO_PATH
-
-    if not os.path.exists(path):
-        print(f"[ERROR] Video file not found: {path}")
-        print(f"        Please place your EarthCam video at: {DEFAULT_VIDEO_PATH}")
-        sys.exit(1)
-
-    return path
-
-
-def print_run_config(video_path: str) -> None:
-    """Print the current run configuration for debugging reference."""
-    print("=" * 55)
-    print("  Step 1: Basic Detection Test")
-    print("=" * 55)
-    print(f"  Video   : {video_path}")
-    print(f"  Model   : {MODEL_NAME}")
-    print(f"  Conf    : {CONFIDENCE_THRESHOLD}")
-    print(f"  Device  : GPU {GPU_DEVICE}")
-    print("=" * 55)
-    print()
-
-
-def run_detection(video_path: str) -> None:
+def run_detection(video_path: str, model_path: str, output_dir: str) -> None:
     """
     Run YOLO person detection on the given video.
-
-    - Detects only class 0 (person) from the COCO dataset.
-    - Displays annotated frames in a real-time window.
-    - Saves the annotated video to outputs/predict/.
     """
-    model = YOLO(MODEL_NAME)
+    config = InferenceConfig()
+    os.makedirs(output_dir, exist_ok=True)
+    out_video_path = os.path.join(output_dir, "detect_output.mp4")
+    
+    video = VideoHandler(video_path, out_video_path)
+    model = YOLO(model_path)
 
     print("[INFO] Starting detection... Press 'q' on the video window to exit early.")
-    print()
+    print(f"[INFO] Output saved to {output_dir}\n")
 
-    # Use stream=True and iterate to prevent RAM from accumulating results
-    for _ in model.predict(
-        source=video_path,
-        classes=[PERSON_CLASS_ID],
-        conf=CONFIDENCE_THRESHOLD,
-        show=True,          # Display real-time window
-        save=True,          # Save annotated video to outputs/predict/
-        project=OUTPUT_DIR,
-        name="predict",
-        exist_ok=True,
-        device=GPU_DEVICE,
-        stream=True,        # <--- Prevents RAM overflow
-        line_width=1,       # Thinner bounding boxes and smaller text
-        imgsz=1024,         # Increase input resolution to detect small objects better
-    ):
-        pass
+    frame_count = 0
+    try:
+        for frame in video.get_frames():
+            frame_count += 1
+            
+            # Predict and plot directly using ultralytics built-in method for simple detection test
+            results = model.predict(
+                source=frame,
+                classes=[config.PERSON_CLASS_ID],
+                conf=config.CONFIDENCE_THRESHOLD,
+                imgsz=1024,
+                verbose=False
+            )[0]
+            
+            annotated_frame = results.plot()
+            video.write_frame(annotated_frame)
+            
+            if frame_count % 100 == 0:
+                print(f"Processed {frame_count} frames...")
+                
+    except KeyboardInterrupt:
+        print("\n[WARNING] Process interrupted by user.")
+    finally:
+        video.release()
 
-
-def print_checklist() -> None:
-    """Print post-run evaluation checklist."""
-    print()
-    print("=" * 55)
+    print("\n" + "=" * 55)
     print("  Step 1 Complete!")
-    print("  Output saved to: outputs/predict/")
+    print(f"  Output saved to: {out_video_path}")
     print("=" * 55)
-    print()
-    print("  Evaluation Checklist:")
-    print("  [?] Are bounding boxes accurately wrapping pedestrians?")
-    print("  [?] Is inference speed smooth? (check ms/frame in terminal)")
-    print()
-
-
-# ============================================================
-# Main Entry Point
-# ============================================================
-def main():
-    video_path = get_video_path()
-    print_run_config(video_path)
-    run_detection(video_path)
-    print_checklist()
 
 
 if __name__ == "__main__":
-    main()
+    config = InferenceConfig()
+    parser = setup_parser(
+        default_video=config.DEFAULT_VIDEO_PATH,
+        default_model=config.MODEL_V1_PATH,
+        default_output=os.path.join(PROJECT_ROOT, "outputs", "predict"),
+        description="Basic Video Detection Test"
+    )
+    args = parser.parse_args()
+    
+    run_detection(args.video, args.model, args.output)
