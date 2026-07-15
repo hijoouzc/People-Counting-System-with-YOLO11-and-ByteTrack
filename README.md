@@ -1,6 +1,6 @@
-# 🚶 Crowd Tracking System with YOLO11, SAHI, and BoT-SORT
+# 🚶 Crowd Tracking System with YOLO11, SAHI, and ByteTrack
 
-A highly robust pedestrian counting system engineered to handle dense crowds and occlusions in high-resolution video streams. This system leverages **YOLO11**, **SAHI** (Slicing Aided Hyper Inference) for detecting extremely small objects, and **BoT-SORT / ByteTrack** for stable identity tracking.
+A highly robust pedestrian counting system engineered to handle dense crowds and occlusions in high-resolution video streams. This system leverages **YOLO11**, **SAHI** (Slicing Aided Hyper Inference) for detecting extremely small objects, and **ByteTrack** for stable identity tracking.
 
 It utilizes an advanced mathematical **Buffer Zone** technique via cross-products to eliminate counting flicker, guaranteeing highly accurate directional counting (IN/OUT) across a custom diagonal counting line.
 
@@ -9,7 +9,7 @@ It utilizes an advanced mathematical **Buffer Zone** technique via cross-product
 ## ✨ Key Features
 - **Interactive Web Dashboard (NEW)**: A professional, iOS-style GUI built with **Streamlit** to adjust confidence thresholds, track buffers, and counting line coordinates in real-time, accompanied by live dynamic charts.
 - **SAHI Integration**: Slices high-resolution frames into smaller grids to detect tiny heads that standard YOLO misses, reducing false negatives drastically.
-- **Custom Tracker Tuning**: Implemented customized BoT-SORT and ByteTrack configurations to minimize Identity Switches (ID Fragmentation) in crowded occlusions.
+- **Custom Tracker Tuning**: Implemented customized ByteTrack configurations to minimize Identity Switches (ID Fragmentation) in crowded occlusions.
 - **Buffer Zone Counting**: Prevents multiple counts (flickering) when a person lingers on the counting line. 
 - **Automated Ground Truth Evaluation**: A robust evaluation pipeline that automatically parses ground truth data and compares them frame-by-frame against the AI predictions to compute Directional Accuracy.
 - **Centralized Configuration**: Code architecture utilizes `pathlib` and a centralized `ProjectPaths` class for seamless execution from any directory.
@@ -75,7 +75,7 @@ streamlit run src/app/streamlit_app.py
 You can also choose to run inference purely via the command line.
 
 ### 1. Standard YOLO Tracking (`count_standard.py`)
-Fast inference using standard YOLO + ByteTrack.
+Fast inference using standard YOLO11 + ByteTrack.
 ```bash
 python src/inference/count_standard.py
 ```
