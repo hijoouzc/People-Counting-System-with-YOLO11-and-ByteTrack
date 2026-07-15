@@ -114,6 +114,8 @@ def track_video(video_path: str, model_path: str, output_dir: str):
                         confidence=np.array(raw_conf),
                         class_id=np.array(raw_cls).astype(int)
                     )
+                    # Filter only the specific class to prevent counting vehicles/animals if generic model is used
+                    detections = detections[detections.class_id == config.PERSON_CLASS_ID]
                 else:
                     detections = sv.Detections.empty()
                     

@@ -78,6 +78,10 @@ def run_counting(video_path: str, model_path: str, output_dir: str):
                 
                 # 2. Convert to Supervision Detections
                 detections = sv.Detections.from_ultralytics(results)
+                
+                # Filter only the specific class (head/person) to prevent counting vehicles/animals if generic model is used
+                detections = detections[detections.class_id == config.PERSON_CLASS_ID]
+                
                 detections = tracker.update_with_detections(detections)
                 
                 # 3. Update Line Zone for counting

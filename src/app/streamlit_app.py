@@ -1,4 +1,5 @@
 import sys
+import time
 from pathlib import Path
 import cv2
 import streamlit as st
@@ -12,6 +13,12 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 from src.utils.config import InferenceConfig, ProjectPaths
+
+def load_yolo_model(model_path):
+    """Load the YOLO model safely without caching to prevent CUDA context corruption on thread kill"""
+    model = YOLO(model_path)
+    model.to('cuda') # Force GPU usage, prevent silent CPU fallback
+    return model
 
 # Configure page
 st.set_page_config(page_title=  "Counting System", layout="wide")
@@ -76,10 +83,11 @@ with col2:
     st.subheader("Analytics")
     
     # Beautiful iOS-like metrics
-    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
     in_metric = metric_col1.empty()
     out_metric = metric_col2.empty()
     current_metric = metric_col3.empty()
+    fps_metric = metric_col4.empty()
     
     st.markdown("---")
     chart_placeholder = st.empty()
@@ -106,10 +114,8 @@ if not start_btn:
 # INFERENCE LOOP
 # ==========================================
 if start_btn:
-    st.sidebar.success("Loading Model...")
-    model = YOLO(model_path)
-    
-    st.sidebar.info("Initializing Tracker...")
+    # Setup model and tracker
+    model = load_yolo_model(model_path)
     tracker = sv.ByteTrack(
         track_activation_threshold=track_thresh,
         lost_track_buffer=track_buffer,
@@ -132,6 +138,13 @@ if start_btn:
         out_counts = []
         
         frame_idx = 0
+        last_in = -1
+        last_out = -1
+        last_people = -1
+        
+        prev_time = time.time()
+        frames_since_last_fps_update = 0
+        last_fps = 0
         
         # We use a progress text in the sidebar
         status_text = st.sidebar.empty()
@@ -148,6 +161,9 @@ if start_btn:
             results = model(frame, conf=conf_thresh, verbose=False)[0]
             detections = sv.Detections.from_ultralytics(results)
             
+            # Filter only the target class (head) to prevent generic models from counting background objects
+            detections = detections[detections.class_id == config.PERSON_CLASS_ID]
+            
             # 2. Tracking
             detections = tracker.update_with_detections(detections)
             
@@ -160,22 +176,33 @@ if start_btn:
             annotated = label_annotator.annotate(scene=annotated, detections=detections, labels=labels)
             annotated = line_zone_annotator.annotate(annotated, line_counter=line_zone)
             
-            # Streamlit requires RGB for images
-            annotated_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-            
-            # 5. Render to UI (OPTIMIZATION: Render every 2 frames and resize to reduce WebSocket payload)
+            # 5. Render to UI (OPTIMIZATION: Encode to JPEG bytes to drastically reduce Streamlit serialization overhead)
             if frame_idx % 2 == 0:
-                display_img = cv2.resize(annotated_rgb, (1024, 576))
-                video_placeholder.image(display_img, channels="RGB")
-                
-                total_in = line_zone.in_count
-                total_out = line_zone.out_count
-                people_in_frame = len(detections)
-                
-                # Render Clean Metrics
+                display_img = cv2.resize(annotated, (854, 480))
+                _, buffer = cv2.imencode('.jpg', display_img, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                video_placeholder.image(buffer.tobytes())
+            
+            total_in = line_zone.in_count
+            total_out = line_zone.out_count
+            people_in_frame = len(detections)
+            
+            # FPS Calculation (update UI once per second to prevent flickering/blocking)
+            frames_since_last_fps_update += 1
+            current_time = time.time()
+            if current_time - prev_time >= 1.0:
+                last_fps = frames_since_last_fps_update / (current_time - prev_time)
+                fps_metric.metric("FPS", f"{last_fps:.1f}")
+                prev_time = current_time
+                frames_since_last_fps_update = 0
+            
+            # Render Clean Metrics ONLY when they change to prevent massive UI blocking
+            if total_in != last_in or total_out != last_out or people_in_frame != last_people:
                 in_metric.metric("In", total_in)
                 out_metric.metric("Out", total_out)
                 current_metric.metric("Current", people_in_frame)
+                last_in = total_in
+                last_out = total_out
+                last_people = people_in_frame
             
             # Analytics recording
             frames_list.append(frame_idx)
